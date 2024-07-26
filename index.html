@@ -1,5 +1,8 @@
 <!--
-  Rui Santos
+
+https://vision-ynakamura.github.io/pen_app
+
+Rui Santos
   Complete project details at https://RandomNerdTutorials.com/esp32-web-bluetooth/
 
   Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated documentation files.
@@ -14,17 +17,28 @@
     <link rel="icon" type="image/png" href="">
 </head>
 <body>
-  <h1>Pen Web Application</h1>
-  <button id="connectBleButton">Connect to Pen Device</button>
-  <button id="disconnectBleButton">Disconnect Pen Device</button>
-  <p>BLE state: <strong><span id="bleState" style="color:#d13a30;">Disconnected</span></strong></p>
-  <h2>Fetched Value</h2>
-  <p><span id="valueContainer">NaN</span></p>
-  <p>Last reading: <span id="timestamp"></span></p>
-  <h2>Control LED</h2>
-  <button id="onButton">ON</button>
-  <button id="offButton">OFF</button>
-  <p>Last value sent: <span id="valueSent"></span></p>
+    <h1>Pen Web Application</h1>
+    <button id="connectBleButton">Connect to Pen Device</button>
+    <button id="disconnectBleButton">Disconnect Pen Device</button>
+    <p>BLE state: <strong><span id="bleState" style="color:#d13a30;">Disconnected</span></strong></p>
+    <label>ID
+        <input type="text" name="pen_id">
+    </label>
+    <label>Name
+        <input type="text" name="pen_name">
+    </label>
+    <label>Name
+        <input type="color" name="pen_color">
+    </label>
+    <button id="entryButton">Entry</button>
+    <h2>Fetched Value</h2>
+    <p><span id="valueContainer">NaN</span></p>
+    <p>Last reading: <span id="timestamp"></span></p>
+    <h2>Control LED</h2>
+    <button id="onButton">ON</button>
+    <button id="offButton">OFF</button>
+    <p>Last value sent: <span id="valueSent"></span></p>
+    <canvas id="canvas"></canvas>  
 </body>
 <script>
     // DOM Elements
@@ -32,10 +46,25 @@
     const disconnectButton = document.getElementById('disconnectBleButton');
     const onButton = document.getElementById('onButton');
     const offButton = document.getElementById('offButton');
+    const entryButton = document.getElementById('entryButton');
     const retrievedValue = document.getElementById('valueContainer');
     const latestValueSent = document.getElementById('valueSent');
     const bleStateContainer = document.getElementById('bleState');
     const timestampContainer = document.getElementById('timestamp');
+    const canvas = document.getElementById('canvas');
+    const ctx = canvas.getContext('2d');
+
+    //ctx.strokeStyle = '#ff5249';
+    //ctx.fillStyle = '#f9fb67';
+    ctx.strokeStyle = '#ff0000';
+    ctx.fillStyle = '#ffffff';
+    ctx.lineWidth = 5;
+
+    /* 円の描画 */
+    ctx.beginPath();
+    ctx.arc(100, 50, 30, 0, 2 * Math.PI); // (100, 50)の位置に半径30pxの円
+    ctx.closePath();
+    ctx.fill();
 
     //Define BLE Device Specs
     /*
@@ -67,6 +96,7 @@
     // Write to the ESP32 LED Characteristic
     onButton.addEventListener('click', () => writeOnCharacteristic(1));
     offButton.addEventListener('click', () => writeOnCharacteristic(0));
+    entryButton.addEventListener('click', entryDevice);
 
     // Check if BLE is available in your Browser
     function isWebBluetoothEnabled() {
@@ -115,6 +145,12 @@
             console.log("Read value: ", value);
             const decodedValue = new TextDecoder().decode(value);
             console.log("Decoded value: ", decodedValue);
+            // ToDo:decodedValueからID,名前,色を取得
+            let dataAry = decodedValue.split(',');
+            console.log("ID=", dataAry[0]);
+            console.log("Name=", dataAry[1]);
+            console.log("Color=", dataAry[2]);
+
             retrievedValue.innerHTML = decodedValue;
         })
         .catch(error => {
@@ -158,6 +194,13 @@
         }
     }
 
+    function entryDevice() {
+        console.log("Disconnect Device.");
+        var entry_str = "1,test,123456";
+        writeOnCharacteristic(entry_str);
+
+    }
+
     function disconnectDevice() {
         console.log("Disconnect Device.");
         if (bleServer && bleServer.connected) {
@@ -198,7 +241,6 @@
         var datetime = day + "/" + month + "/" + year + " at " + hours + ":" + minutes + ":" + seconds;
         return datetime;
     }
-
 
 </script>
 
