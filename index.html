@@ -75,8 +75,8 @@ Rui Santos
     */
     var deviceName ='PenDevice';
     var bleService = '759359d2-8338-45bb-8fae-4ece4f4f62b9';
-    var ledCharacteristic = 'ddaead79-2d66-4272-b3b1-881fcb6778e6';
-    var sensorCharacteristic= 'ddaead79-2d66-4272-b3b1-881fcb6778e6';
+    var Characteristic = 'ddaead79-2d66-4272-b3b1-881fcb6778e6';
+    var sensorCharacteristic= 'ddaead79-2d66-4272-b3b1-881fcb6778e6';   // 不要？
 
     //Global Variables to Handle Bluetooth
     var bleServer;
@@ -94,8 +94,8 @@ Rui Santos
     disconnectButton.addEventListener('click', disconnectDevice);
 
     // Write to the ESP32 LED Characteristic
-    onButton.addEventListener('click', () => writeOnCharacteristic(1));
-    offButton.addEventListener('click', () => writeOnCharacteristic(0));
+    onButton.addEventListener('click', () => writeOnCharacteristic("LED=1"));
+    offButton.addEventListener('click', () => writeOnCharacteristic("LED=0"));
     entryButton.addEventListener('click', entryDevice);
 
     // Check if BLE is available in your Browser
@@ -175,15 +175,17 @@ Rui Santos
 
     function writeOnCharacteristic(value){
         if (bleServer && bleServer.connected) {
-            bleServiceFound.getCharacteristic(ledCharacteristic)
+            bleServiceFound.getCharacteristic(Characteristic)
             .then(characteristic => {
-                console.log("Found the LED characteristic: ", characteristic.uuid);
-                const data = new Uint8Array([value]);
+                console.log("Found the characteristic: ", characteristic.uuid);
+                const textEncoder = new TextEncoder();
+                const data = textEncoder.encode(value);
+                //const data = new Uint8Array([value]);
                 return characteristic.writeValue(data);
             })
             .then(() => {
                 latestValueSent.innerHTML = value;
-                console.log("Value written to LEDcharacteristic:", value);
+                console.log("Value written to characteristic:", value);
             })
             .catch(error => {
                 console.error("Error writing to the LED characteristic: ", error);
@@ -195,10 +197,9 @@ Rui Santos
     }
 
     function entryDevice() {
-        console.log("Disconnect Device.");
-        var entry_str = "1,test,123456";
+        console.log("Entry Device.");
+        var entry_str = "ATTR=1,test,123456";
         writeOnCharacteristic(entry_str);
-
     }
 
     function disconnectDevice() {
